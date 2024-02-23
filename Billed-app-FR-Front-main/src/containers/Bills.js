@@ -33,31 +33,37 @@ export default class {
         .bills()
         .list()
         .then(snapshot => {
-          const bills = snapshot
-            .map(doc => {
-              try {
-                return {
-                  ...doc,
-                  date: formatDate(doc.date),
-                  status: formatStatus(doc.status)
-                }
-              } catch (e) {
-                // if for some reason, corrupted data was introduced, we manage here failing formatDate function
-                // log the error and return unformatted date in that case
-                console.log(e, 'for', doc)
-                return {
-                  ...doc,
-                  date: doc.date,
-                  status: formatStatus(doc.status)
-                }
+          // Tri des factures par date du plus récent au plus ancien
+          const sortedBills = snapshot.sort((a, b) => {
+            // Gestion des cas où la date est null
+            if (a.date === null) return 1; // Place `a` après si `a.date` est null
+            if (b.date === null) return -1; // Place `b` après si `b.date` est null
+
+            // Tri inversé
+            return b.date.localeCompare(a.date); // Inversion des arguments pour trier du plus récent au plus ancien
+          });
+
+          // Formatage des dates et des statuts de chaque facture
+          const bills = sortedBills.map(doc => {
+            try {
+              return {
+                ...doc,
+                date: doc.date ? formatDate(doc.date) : 'N/A',
+                status: formatStatus(doc.status)
               }
-            }).sort((a, b) => b.date.localeCompare(a.date));
-          console.log(bills)
-          //console.log('length', bills.length)
-          //const sortedBills = sortBillsByDate(bills);
-          //console.log(sortedBills)
-          return bills
-        })
+            } catch (e) {
+              console.log(e, 'for', doc);
+              return {
+                ...doc,
+                date: doc.date ? formatDate(doc.date) : 'N/A',
+                status: formatStatus(doc.status)
+              }
+            }
+          });
+
+          return bills;
+        });
+
         
     }
   }
