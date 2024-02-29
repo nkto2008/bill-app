@@ -117,19 +117,21 @@ describe("Given I am connected as an employee", () => {
     
     });
     test("should fail with 500 message error", async () => {
+      //spyOn pour simuler une erreur 500 lors de son appel
       jest.spyOn(mockStore, "bills").mockImplementationOnce(() => {
         return {
           create: () => Promise.reject(new Error("Erreur 500"))
         }
       });
-
+      // Initialise le DOM avec l'interface utilisateur de création d'une nouvelle facture
       document.body.innerHTML = NewBillUI();
+      // Crée une nouvelle instance de `NewBill` avec les dépendances nécessaires, y compris un mock pour naviguer, le store mocké, et localStorage
       const newBill = new NewBill({
         document, onNavigate: (pathname) => {
           document.body.innerHTML = ROUTES({ pathname })
         }, store: mockStore, localStorage: window.localStorage
       });
-
+      // Mock de la méthode `handleSubmit` pour tester son appel lors de la soumission du formulaire
       const handleSubmitMock = jest.fn();
       newBill.handleSubmit = handleSubmitMock;
 
@@ -137,9 +139,12 @@ describe("Given I am connected as an employee", () => {
       const form = screen.getByTestId('form-new-bill');
       form.addEventListener('submit', newBill.handleSubmit);
       fireEvent.submit(form);
+      // Vérifie que la méthode `handleSubmit` a bien été appelée lors de la soumission
       expect(handleSubmitMock).toHaveBeenCalled();
+      // Après la soumission, affiche un message d'erreur pour simuler la réponse de l'interface utilisateur à l'erreur 500
       const html = BillsUI({ error: "Erreur 500" });
       document.body.innerHTML = html;
+      // Recherche le message d'erreur dans le document pour confirmer son affichage
       const message = await screen.getByText(/Erreur 500/);
       expect(message).toBeTruthy();  
     });
